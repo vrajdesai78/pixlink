@@ -53,7 +53,7 @@ const uploadFile = async (prompt: string) => {
     });
     const imageUrl = aiResponse.data[0].url;
 
-    const file = await imageUrlToFile(imageUrl!, "cute-cat.png");
+    const file = await imageUrlToFile(imageUrl!, "pixlink.png");
 
     const data = new FormData();
     data.append("file", file);
@@ -106,7 +106,7 @@ export const GET = async (req: Request) => {
 
     const payload: ActionGetResponse = {
       title: "PixLink",
-      icon: new URL("/blink.png", requestUrl.origin).toString(),
+      icon: new URL("/blinks.png", requestUrl.origin).toString(),
       description: "Generate customise PixLink Avatar",
       label: "Generate PixLink",
       links: {
