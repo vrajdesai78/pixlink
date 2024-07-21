@@ -112,7 +112,7 @@ export const GET = async (req: Request) => {
       links: {
         actions: [
           {
-            label: "Enter your prompt", // button text
+            label: "Mint & Reveal", // button text
             href: `${baseHref}&prompt={prompt}`, // this href will have a text input
             parameters: [
               {
