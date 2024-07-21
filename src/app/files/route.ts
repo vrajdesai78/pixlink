@@ -4,6 +4,12 @@ import PinataClient from "@pinata/sdk";
 
 const pinata = new PinataClient({ pinataJWTKey: process.env.PINATA_JWT });
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData();
@@ -14,7 +20,7 @@ export async function POST(request: NextRequest) {
         name: file.name,
       },
     };
-    const { IpfsHash } = await pinata.pinJSONToIPFS(stream, options);
+    const { IpfsHash } = await pinata.pinFileToIPFS(stream, options);
 
     return NextResponse.json({ IpfsHash }, { status: 200 });
   } catch (e) {

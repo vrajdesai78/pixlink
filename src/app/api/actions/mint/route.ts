@@ -8,16 +8,65 @@ import {
   ActionPostRequest,
 } from "@solana/actions";
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-  VersionedTransaction,
-} from "@solana/web3.js";
+  createTransferInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import bs58 from "bs58";
+import OpenAI from "openai";
 
 const DEFAULT_SOL_ADDRESS: PublicKey = new PublicKey(
   "GqkJ3UoKTScvXiaJUxrGJ9QD847LAj2DTvMzqjaT2tJm"
 );
+
+function privateKeyToUint8Array(privateKeyString: string) {
+  return new Uint8Array(bs58.decode(privateKeyString));
+}
+
+async function imageUrlToFile(
+  imageUrl: string,
+  fileName: string
+): Promise<File> {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const blob = await response.blob();
+    return new File([blob], fileName, { type: blob.type });
+  } catch (error) {
+    console.error("Error converting image URL to File:", error);
+    throw error;
+  }
+}
+
+const uploadFile = async (prompt: string) => {
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_KEY!,
+      dangerouslyAllowBrowser: true,
+    });
+
+    const aiResponse = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+    const imageUrl = aiResponse.data[0].url;
+
+    const file = await imageUrlToFile(imageUrl!, "cute-cat.png");
+
+    const data = new FormData();
+    data.append("file", file);
+    const response = await fetch(`${process.env.BASE_URL}/files`, {
+      method: "POST",
+      body: data,
+    });
+    const resData = await response.json();
+    return `https://ipfs.moralis.io:2053/ipfs/${resData.IpfsHash}`;
+  } catch (e) {
+    console.log(e);
+  }
+};
 
 const uploadMetadata = async (url: string, creator: string) => {
   const pinata = new PinataClient({ pinataJWTKey: process.env.PINATA_JWT });
@@ -58,17 +107,17 @@ export const GET = async (req: Request) => {
     const payload: ActionGetResponse = {
       title: "BlinkPic",
       icon: new URL("/blink.png", requestUrl.origin).toString(),
-      description: "Generate a BlinkPic from your X PFP",
+      description: "Generate customise BlinkPic Avatar",
       label: "Generate BlinkPic",
       links: {
         actions: [
           {
-            label: "Enter your X username", // button text
-            href: `${baseHref}&username={username}`, // this href will have a text input
+            label: "Enter your prompt", // button text
+            href: `${baseHref}&prompt={prompt}`, // this href will have a text input
             parameters: [
               {
-                name: "username",
-                label: "X Username",
+                name: "prompt",
+                label: "Enter your prompt to generate BlinkPic",
                 required: true,
               },
             ],
@@ -98,9 +147,9 @@ export const OPTIONS = GET;
 export const POST = async (req: Request) => {
   try {
     const requestUrl = new URL(req.url);
-    const { username, toPubkey } = validatedQueryParams(requestUrl);
+    const { prompt, toPubkey } = validatedQueryParams(requestUrl);
 
-    console.log("username", username);
+    console.log("prompt", prompt);
     console.log("toPubkey", toPubkey);
     const body: ActionPostRequest = await req.json();
 
@@ -115,13 +164,17 @@ export const POST = async (req: Request) => {
       });
     }
 
-    const url = await uploadMetadata(username, account.toBase58());
+    const secretKeyArray = privateKeyToUint8Array(process.env.PRIVATE_KEY!);
 
-    console.log("url", url);
+    const wallet = Keypair.fromSecretKey(secretKeyArray);
 
-    const connection = new Connection(
-      "https://mainnet.helius-rpc.com/?api-key=a0529e8a-e33f-4f66-95ad-b9036bc552e7"
-    );
+    const fileUrl = await uploadFile(prompt);
+
+    console.log("fileUrl", fileUrl);
+
+    const url = await uploadMetadata(fileUrl!, account.toBase58());
+
+    const connection = new Connection(process.env.RPC_URL!);
 
     const transaction = new Transaction();
 
@@ -136,7 +189,7 @@ export const POST = async (req: Request) => {
       metadataUri: url,
       feePayer: account.toBase58(),
       maxSupply: 1,
-      priorityFee: 100,
+      priorityFee: 1000,
       isMutable: true,
       receiver: account.toBase58(),
     });
@@ -147,18 +200,41 @@ export const POST = async (req: Request) => {
 
     transaction.add(decodedTxn);
 
+    const senderAccount = getAssociatedTokenAddressSync(
+      new PublicKey("SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa"),
+      account
+    );
+
+    const receiverAccount = getAssociatedTokenAddressSync(
+      new PublicKey("SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa"),
+      DEFAULT_SOL_ADDRESS
+    );
+
+    console.log("senderAccount", senderAccount.toBase58());
+    console.log("receiverAccount", receiverAccount.toBase58());
+
     transaction.feePayer = account;
 
-    const latestBlock = await connection.getLatestBlockhash();
+    const latestBlockhash = await connection.getLatestBlockhash();
 
-    transaction.recentBlockhash = latestBlock.blockhash;
+    transaction!.recentBlockhash = latestBlockhash.blockhash;
+    transaction!.lastValidBlockHeight = latestBlockhash.lastValidBlockHeight;
 
-    transaction.lastValidBlockHeight = latestBlock.lastValidBlockHeight;
+    transaction.add(
+      createTransferInstruction(
+        senderAccount,
+        receiverAccount,
+        account,
+        69 * Math.pow(10, 6)
+      )
+    );
+
+    transaction.partialSign(wallet);
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
         transaction,
-        message: `Minted BlinkPic for ${username}`,
+        message: `Minted BlinkPic`,
       },
     });
 
@@ -178,23 +254,21 @@ export const POST = async (req: Request) => {
 
 function validatedQueryParams(requestUrl: URL) {
   let toPubkey: PublicKey = DEFAULT_SOL_ADDRESS;
-  let username = "vrajdesai78";
+  let prompt = "Cool cat, cartoonist, cute, glasses";
 
   try {
     if (requestUrl.searchParams.get("to")) {
       toPubkey = new PublicKey(requestUrl.searchParams.get("to")!);
     }
-    if (requestUrl.searchParams.get("username")) {
-      username = `https://x.com/${requestUrl.searchParams.get(
-        "username"
-      )}/photo`;
+    if (requestUrl.searchParams.get("prompt")) {
+      prompt = requestUrl.searchParams.get("prompt")!;
     }
   } catch (err) {
-    throw "Invalid input query parameter: to";
+    throw "Invalid input query parameter: prompt";
   }
 
   return {
-    username,
+    prompt,
     toPubkey,
   };
 }
