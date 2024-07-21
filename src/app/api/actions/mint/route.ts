@@ -14,6 +14,8 @@ import {
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
 
+export const maxDuration = 300;
+
 const DEFAULT_SOL_ADDRESS: PublicKey = new PublicKey(
   "GqkJ3UoKTScvXiaJUxrGJ9QD847LAj2DTvMzqjaT2tJm"
 );
