@@ -71,8 +71,8 @@ const uploadFile = async (prompt: string) => {
 const uploadMetadata = async (url: string, creator: string) => {
   const pinata = new PinataClient({ pinataJWTKey: process.env.PINATA_JWT });
   const result = await pinata.pinJSONToIPFS({
-    name: "BlinkPic",
-    description: "BlinkPic NFT",
+    name: "PixLink",
+    description: "PixLink NFT",
     symbol: "BLP",
     image: url,
     seller_fee_basis_points: 500,
@@ -105,10 +105,10 @@ export const GET = async (req: Request) => {
     ).toString();
 
     const payload: ActionGetResponse = {
-      title: "BlinkPic",
+      title: "PixLink",
       icon: new URL("/blink.png", requestUrl.origin).toString(),
-      description: "Generate customise BlinkPic Avatar",
-      label: "Generate BlinkPic",
+      description: "Generate customise PixLink Avatar",
+      label: "Generate PixLink",
       links: {
         actions: [
           {
@@ -117,7 +117,7 @@ export const GET = async (req: Request) => {
             parameters: [
               {
                 name: "prompt",
-                label: "Enter your prompt to generate BlinkPic",
+                label: "Enter your prompt to generate PixLink",
                 required: true,
               },
             ],
@@ -234,7 +234,7 @@ export const POST = async (req: Request) => {
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
         transaction,
-        message: `Minted BlinkPic`,
+        message: `Minted PixLink`,
       },
     });
 
