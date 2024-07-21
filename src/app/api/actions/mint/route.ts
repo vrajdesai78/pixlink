@@ -73,7 +73,7 @@ const uploadMetadata = async (url: string, creator: string) => {
   const result = await pinata.pinJSONToIPFS({
     name: "PixLink",
     description: "PixLink NFT",
-    symbol: "BLP",
+    symbol: "PXL",
     image: url,
     seller_fee_basis_points: 500,
     properties: {
@@ -148,9 +148,6 @@ export const POST = async (req: Request) => {
   try {
     const requestUrl = new URL(req.url);
     const { prompt, toPubkey } = validatedQueryParams(requestUrl);
-
-    console.log("prompt", prompt);
-    console.log("toPubkey", toPubkey);
     const body: ActionPostRequest = await req.json();
 
     // validate the client provided input
@@ -169,8 +166,6 @@ export const POST = async (req: Request) => {
     const wallet = Keypair.fromSecretKey(secretKeyArray);
 
     const fileUrl = await uploadFile(prompt);
-
-    console.log("fileUrl", fileUrl);
 
     const url = await uploadMetadata(fileUrl!, account.toBase58());
 
@@ -209,9 +204,6 @@ export const POST = async (req: Request) => {
       new PublicKey("SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa"),
       DEFAULT_SOL_ADDRESS
     );
-
-    console.log("senderAccount", senderAccount.toBase58());
-    console.log("receiverAccount", receiverAccount.toBase58());
 
     transaction.feePayer = account;
 
