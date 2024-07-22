@@ -110,7 +110,7 @@ export const POST = async (req: Request) => {
 
     const tx = await shyft.nft.compressed.mint({
       creatorWallet: "5uUf32tjr8ZJ5cQeYoNwq4nbz1dB5BshcFeyo6VwDSPQ",
-      merkleTree: "FbdosWezrACU94Vuw9ZL8UJaj4wzthXxB3ZgiKf7F5N8",
+      merkleTree: "ByLjz66N93WAFSaF3KWoGvNH1uQbsqH4QD4Eqe7o9jNX",
       metadataUri: url,
       feePayer: account.toBase58(),
       maxSupply: 1,
