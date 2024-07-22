@@ -36,7 +36,7 @@ export const GET = async (req: Request) => {
 
     const payload: ActionGetResponse = {
       title: "PixLink",
-      icon: new URL("/blinks.png", requestUrl.origin).toString(),
+      icon: new URL("/pixlink.png", requestUrl.origin).toString(),
       description: "Generate customise PixLink Avatar",
       label: "Generate PixLink",
       links: {
