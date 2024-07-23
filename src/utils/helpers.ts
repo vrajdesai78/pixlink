@@ -1,6 +1,8 @@
 "use server";
 
 import PinataClient from "@pinata/sdk";
+import { Transaction } from "@solana/web3.js";
+import axios from "axios";
 import OpenAI from "openai";
 
 async function imageUrlToFile(
@@ -74,4 +76,44 @@ const uploadMetadata = async (url: string, creator: string) => {
   return `https://ipfs.moralis.io:2053/ipfs/${result.IpfsHash}`;
 };
 
-export { uploadFile, uploadMetadata };
+const buildList = async (mint: string, owner: string, price: string) => {
+  const query = `
+  query TcompListTx($mint: String!, $owner: String!, $price: Decimal!) {
+    tcompListTx(mint: $mint, owner: $owner, price: $price) {
+      txs {
+        tx
+      }
+    }
+  }
+`;
+
+  const variables = {
+    mint,
+    owner,
+    price,
+  };
+
+  const requestData = {
+    operationName: "TcompListTx",
+    query: query,
+    variables: variables,
+  };
+
+  let lsTxn: Transaction | undefined;
+
+  axios
+    .post("https://tensor.xnfts.dev/", requestData)
+    .then(async (response) => {
+      const txs = response.data.data.tcompListTx.txs[0].tx.data;
+      const transaction = Transaction.from(Buffer.from(txs, "base64"));
+      console.log('txn', transaction);
+      lsTxn = transaction;
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+
+  return lsTxn;
+};
+
+export { uploadFile, uploadMetadata, buildList };

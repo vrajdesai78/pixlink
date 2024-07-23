@@ -1,4 +1,4 @@
-import { uploadFile, uploadMetadata } from "@/utils/helpers";
+import { buildList, uploadFile, uploadMetadata } from "@/utils/helpers";
 import { Network, ShyftSdk } from "@shyft-to/js";
 import {
   ActionPostResponse,
@@ -111,7 +111,6 @@ export const POST = async (req: Request) => {
     const tx = await shyft.nft.compressed.mint({
       creatorWallet: "5uUf32tjr8ZJ5cQeYoNwq4nbz1dB5BshcFeyo6VwDSPQ",
       merkleTree: "ByLjz66N93WAFSaF3KWoGvNH1uQbsqH4QD4Eqe7o9jNX",
-      collectionAddress: "G8nWR1ufykhpUrJhmJ3iEMukroK5oNQVLrFL79j2U9BD",
       metadataUri: url,
       feePayer: account.toBase58(),
       maxSupply: 1,
@@ -120,11 +119,17 @@ export const POST = async (req: Request) => {
       receiver: account.toBase58(),
     });
 
+    const mintAddr = tx.mint;
+
+    const listTxn = await buildList(mintAddr, account.toBase58(), "1000000000");
+
     const decodedTxn = Transaction.from(
       Buffer.from(tx.encoded_transaction, "base64")
     );
 
     transaction.add(decodedTxn);
+
+    transaction.add(listTxn!);
 
     const senderAccount = getAssociatedTokenAddressSync(
       new PublicKey("SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa"),

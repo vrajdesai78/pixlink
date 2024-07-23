@@ -9,11 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@apollo/client": "^3.10.8",
+    "@metaplex-foundation/mpl-bubblegum": "^4.1.0",
     "@pinata/sdk": "^2.1.0",
     "@shyft-to/js": "^0.2.40",
     "@solana/actions": "^1.2.0",
+    "@solana/spl-account-compression": "^0.2.1",
     "@solana/spl-token": "^0.4.8",
     "@solana/web3.js": "^1.95.1",
+    "@tensor-hq/tensor-common": "^8.0.8",
+    "@tensor-oss/tcomp-sdk": "^6.0.0",
+    "apollo-link": "^1.2.14",
+    "axios": "^1.7.2",
     "bs58": "^6.0.0",
     "next": "14.2.5",
     "openai": "^4.52.7",
