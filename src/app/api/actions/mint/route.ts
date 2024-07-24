@@ -13,6 +13,7 @@ import {
 } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
+import { Metadata } from "next";
 
 export const maxDuration = 300;
 
@@ -23,6 +24,14 @@ const DEFAULT_SOL_ADDRESS: PublicKey = new PublicKey(
 function privateKeyToUint8Array(privateKeyString: string) {
   return new Uint8Array(bs58.decode(privateKeyString));
 }
+
+export const metadata: Metadata = {
+  title: "PixLink",
+  description: "Generate customise PixLink Avatar",
+  openGraph: {
+    images: "https://www.pixlink.fun/pixlink.png",
+  },
+};
 
 export const GET = async (req: Request) => {
   try {
