@@ -8,13 +8,7 @@ export const metadata: Metadata = {
   title: "PixLink",
   description: "Generate customise PixLink Avatar",
   openGraph: {
-    images: [
-      {
-        url: "https://www.pixlink.fun/pixlink.png",
-        width: 500,
-        height: 500,
-      },
-    ],
+    images: "https://www.pixlink.fun/pixlink.png",
   },
 };
 
